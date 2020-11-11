@@ -1,0 +1,422 @@
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src = "//threejs.org/build/three.js"></script>
+    <script src = "//threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src = "//threejs.org/examples/js/controls/FlyControls.js"></script>
+    <script src="//unpkg.com/3d-force-graph-vr"></script>
+    <script src="//code.createjs.com/1.0.0/tweenjs.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
+
+
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+<body>
+<div id="3d-graph"></div>
+<script type = "text/javascript" >
+           var q = {}
+           /*$( "#target" ).keypress(function() {
+               console.log( "Handler for .keypress() called." );
+           });*/
+           $(document).ready(function () {
+
+
+               /*$.ajax({
+                url: 'http://localhost:8080/endpoint',
+                type: 'GET',
+                success: function (response) {
+                    //alert("Success!");
+                    q = response
+                }
+            }).done(function() {
+               var nodes = []
+               var edges = []
+               var courses = q.courses
+               var concepts = q.concepts
+
+               for (var i = 0; i < 10; ++i) {
+                   if(i < 5) {nodes.push({id : concepts[i]})}
+                   var concept1 = courses[i].concept1
+                   var concept2 = courses[i].concept2
+                   nodes.push({id : i})
+                   edges.push({source : i, target : concept1})
+                   edges.push({source : i, target : concept2})
+               }
+               const gData = {
+                   nodes: nodes,
+                   links: edges
+               }
+               const Graph = ForceGraph3D()
+               (document.getElementById('3d-graph'))
+                   .graphData(gData);
+           })*/
+
+               $("#target").keypress(function () {
+                   console.log("Handler for .keypress() called.");
+               });
+
+               $(document).keypress(function (event) {
+                   var keycode = (event.keyCode ? event.keyCode : event.which);
+                   if (keycode == '13') {
+                       alert('You pressed a "enter" key in somewhere');
+                       $.ajax({
+                           url: 'http://localhost:8080/endpoint',
+                           type: 'GET',
+                           success: function (response) {
+                               //alert("Success!");
+                               q = response
+                           }
+                       }).done(function () {
+                           var nodes = []
+                           var edges = []
+                           var courses = q.courses
+                           var concepts = q.concepts
+
+                           for (var i = 0; i < 10; ++i) {
+                               if (i < 5) {
+                                   nodes.push({id: concepts[i], group: 0x000000})
+                               }
+                               var concept1 = courses[i].concept1
+                               var concept2 = courses[i].concept2
+                               nodes.push({id: i, group: 0x0000FF})
+                               edges.push({source: i, target: concept1})
+                               edges.push({source: i, target: concept2})
+                           }
+                           const gData = {
+                               nodes: nodes,
+                               links: edges
+                           }
+
+
+
+                           /*
+                           const Graph = ForceGraph3D(({ controlType: 'fly' }))
+                           (document.getElementById('3d-graph'))
+                               .graphData(gData)*/
+                           const elem = document.getElementById('3d-graph');
+                           const Graph = ForceGraph3D({ controlType: 'fly' })
+                               (elem).graphData(gData)
+                               //.nodeThreeObject(node => {
+                                   /*var sphere = new THREE.SphereGeometry(20);
+                                   var lambert = new THREE.MeshBasicMaterial({color: 0xffff00, opacity: 0.75 });
+                                   var mesh = new THREE.Mesh(sphere, lambert);
+
+                                   var group = new THREE.Group();
+                                   group.add(mesh);
+
+                                   return group;*/
+                                   //console.log(node)
+                               //})
+                               //.nodeAutoColorBy('group')
+                               .nodeLabel('id')
+                               .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
+                               .onNodeClick(node => {
+                                   // Aim at node from outside it
+                                   //let camX = camera.position.x
+                                   //let camY = camera.position.y
+                                   //let camZ = camera.position.z
+                                   const distance = 40;
+                                   const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+                                   //console.log(node)
+                                   //console.log(Graph.controls().object)// = new THREE.FlyControls(Graph.camera(), elem)
+
+                                       Graph.cameraPosition(
+                                           {x: node.x, y: node.y, z : node.z},//{x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio}, // new position
+                                           node, // lookAt ({ x, y, z })
+                                           3000  // ms transition duration
+                                       );
+                                        setTimeout(function () {
+                                       //while(Math.abs(cam))
+                                       //Graph.controls().object.lookAt(node.x,node.y,node.z)
+                                       var cam = Graph.controls().object
+                                        /*console.log(cam.rotation)
+                                       cam.lookAt(node.x,node.y,node.z)
+                                       console.log(cam.rotation)
+                                       cam.lookAt()*/
+                                            /*var camera       // camera
+                                            var cameraPos0   // initial camera position
+                                            var cameraUp0    // initial camera up
+                                            var cameraZoom   // camera zoom
+                                            var iniQ         // initial quaternion
+                                            var endQ         // target quaternion
+                                            var curQ         // temp quaternion during slerp
+                                            var vec3         // generic vector object
+                                            var tweenValue   // tweenable value
+
+// init camera
+                                            function setup()
+                                            {
+                                                camera = cam//new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000)
+                                                //camera.position = new THREE.Vector3(0, 0, 80)
+                                                cameraPos0 = camera.position.clone()
+                                                cameraUp0 = camera.up.clone()
+                                                cameraZoom = camera.position.z
+                                            }
+
+// set a new target for the camera
+                                            function moveCamera(euler, zoom)
+                                            {
+                                                // reset everything
+                                                endQ = new THREE.Quaternion()
+                                                iniQ = new THREE.Quaternion().copy(camera.quaternion)
+                                                curQ = new THREE.Quaternion()
+                                                vec3 = new THREE.Vector3()
+                                                tweenValue = 0
+
+                                                endQ.setFromEuler(euler)
+                                                TweenLite.to(this, 5, { tweenValue:1, cameraZoom:zoom, onUpdate:onSlerpUpdate })
+                                            }
+
+// on every update of the tween
+                                            function onSlerpUpdate()
+                                            {
+                                                // interpolate quaternions with the current tween value
+                                                THREE.Quaternion.slerp(iniQ, endQ, curQ, 0.5)
+
+                                                // apply new quaternion to camera position
+                                                vec3.x = cameraPos0.x
+                                                vec3.y = cameraPos0.y
+                                                vec3.z = cameraZoom
+                                                vec3.applyQuaternion(curQ)
+                                                camera.position.copy(vec3)
+
+                                                // apply new quaternion to camera up
+                                                vec3 = cameraUp0.clone()
+                                                vec3.applyQuaternion(curQ)
+                                                camera.up.copy(vec3)
+                                            }
+                                            setup()
+                                            moveCamera(new THREE.Euler(node.x, node.y, node.z), 100)*/
+
+                                       //var lookAtVector = new THREE.Vector3(cam.matrix[8], cam.matrix[9], cam.matrix[10]);
+                                       //console.log(lookAtVector)
+                                       //cam.lookAt(node.x,node.y,node.z)
+                                       //lookAtVector = new THREE.Vector3(cam.matrix[8], cam.matrix[9], cam.matrix[10]);
+                                       //console.log(lookAtVector)
+                                       //var startRotation = new THREE.Euler().copy( cam.rotation );
+
+// final rotation (with lookAt)
+                                       //cam.lookAt(node.x,node.y,node.z);
+
+                                       //var endRotation = new THREE.Euler().copy( cam.rotation )
+                                       //cam.rotation.copy( startRotation );
+                                   //console.log(cam.rotation)
+                                   //console.log(new THREE.Euler().copy( cam.rotation ))
+                                       //new createjs.Tween( cam ).to( { rotation: {_x: node.x, _y: node.y, _z: node.z, _order: "XYZ"} }, 600 ).start();
+
+                                       //console.log(Graph.controls().object.position.x)
+                                   }, 3000);
+
+                                   /*Graph.cameraPosition(
+                                       , // new position
+                                       node,//node, // lookAt ({ x, y, z })
+                                       3000  // ms transition duration
+                                   );*/
+                               });
+                           const size = 10;
+                           const divisions = 10;
+
+                           const gridHelper = new THREE.GridHelper( size, divisions );
+
+                           //Graph.scene().add(gridHelper);
+                           /*console.log(Graph.scene())
+                           var scene = Graph.scene();
+                           console.log(scene)
+                           scene.add(gridHelper)*/
+
+                       })
+                   }
+
+                   if (keycode == '32') {
+                       alert('pressed space')
+                       $.ajax({
+                           url: 'http://localhost:8080/endpoint',
+                           type: 'POST',
+                           data: {code: keycode}
+
+                       })
+
+                       $.ajax({
+                           url: 'http://localhost:8080/endpoint',
+                           type: 'GET',
+                           success: function (response) {
+                               //alert("Success!");
+                               q = response
+                           }
+                       }).done(function () {
+                           var nodes = []
+                           var edges = []
+                           var courses = q.courses
+                           var concepts = q.concepts
+
+                           for (var i = 0; i < 10; ++i) {
+                               if (i < 5) {
+                                   nodes.push({id: concepts[i]})
+                               }
+                               var concept1 = courses[i].concept1
+                               var concept2 = courses[i].concept2
+                               nodes.push({id: i})
+                               edges.push({source: i, target: concept1})
+                               edges.push({source: i, target: concept2})
+                           }
+                           const gData = {
+                               nodes: nodes,
+                               links: edges
+                           }
+
+                           /*
+                           const Graph = ForceGraph3D(({ controlType: 'fly' }))
+                           (document.getElementById('3d-graph'))
+                               .graphData(gData)*/
+                           const elem = document.getElementById('3d-graph');
+                           const Graph = ForceGraphVR()//ForceGraph3D()//{ controlType: 'fly' })
+                               (elem).graphData(gData)
+
+
+                           /*var scene = new THREE.Scene();
+                           var camera = new THREE.PerspectiveCamera(50, 500 / 400, 0.1, 1000);
+
+                           var renderer = new THREE.WebGLRenderer();
+                           renderer.setSize(window.innerWidth, window.innerHeight);
+                           document.body.appendChild(renderer.domElement);
+                           var geometry = new THREE.SphereGeometry(0.5)//, 50, 50)//, 0, Math.PI * 2, Math.PI * 2, Math.PI * 2);
+                           var material = new THREE.MeshNormalMaterial()
+                           var nodes = []
+                           var edges = []
+                           var courses = q.courses
+                           var concepts = q.concepts
+                           var coordinates = {}
+                           var material1 = new THREE.LineBasicMaterial( { color: 0x696969 } );
+
+                           for (var i = 0; i < 5; ++i) {
+
+                               var t1 = Math.random() * 20
+                               var t2 = Math.random() * 20
+                               var t3 = Math.random() * 20
+                               var sphere = new THREE.Mesh(geometry, material);
+
+                               sphere.translateOnAxis(new THREE.Vector3(1, 0, 0), t1)
+                               sphere.translateOnAxis(new THREE.Vector3(0, 1, 0), t2)
+                               sphere.translateOnAxis(new THREE.Vector3(0, 0, 1), t3)
+
+                               coordinates[concepts[i]] = [t1, t2, t3]
+
+
+                               scene.add(sphere);
+                           }
+                           /*nodes.push({
+                                   id : concepts[i]})
+                           for (var i = 0; i < 10; ++i) {
+
+                               var s1 = Math.random() * 20
+                               var s2 = Math.random() * 20
+                               var s3 = Math.random() * 20
+                               var sphere = new THREE.Mesh(geometry, material);
+
+                               sphere.translateOnAxis(new THREE.Vector3(1, 0, 0), s1)
+                               sphere.translateOnAxis(new THREE.Vector3(0, 1, 0), s2)
+                               sphere.translateOnAxis(new THREE.Vector3(0, 0, 1), s3)
+                               scene.add(sphere);
+                               var points = []
+                               var concept1 = coordinates[courses[i].concept1]
+                               var concept2 = coordinates[courses[i].concept2]
+
+                               points.push(new THREE.Vector3(concept1[0], concept1[1], concept1[2]))
+                               points.push(new THREE.Vector3(s1, s2, s3))
+                               points.push(new THREE.Vector3(concept2[0], concept2[1], concept2[2]))
+
+                               scene.add(new THREE.Line( new THREE.BufferGeometry().setFromPoints( points ), material1 ))
+
+
+
+                       camera.position.z = 10;
+                       var controls = new THREE.OrbitControls(camera, renderer.domElement);
+                       var render = function () {
+                           requestAnimationFrame(render);
+
+                           //cube.rotation.y += 0.01;
+
+                           renderer.render(scene, camera);
+                       };
+
+                       render();
+
+
+                   })*/
+
+                       })
+                   }
+
+
+               })
+           })
+           /*var b = 5;
+
+           var scene = new THREE.Scene();
+           var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+           var renderer = new THREE.WebGLRenderer();
+           renderer.setSize(window.innerWidth, window.innerHeight);
+           document.body.appendChild(renderer.domElement)*/
+           //document.body.innerText = "fcgvhbjnk"
+
+           /*var nodes = []
+           var edges = []
+           var courses = q.courses
+           var concepts = q.concepts
+
+           for (var i = 0; i < 10; ++i) {
+               if(i < 5) {nodes.push({id : concepts[i]})}
+               var concept1 = courses[i].concept1
+               var concept2 = courses[i].concept2
+               nodes.push({id : i})
+               edges.push({source : i, target : concept1})
+               edges.push({source : i, target : concept2})
+           }
+            const gData = {
+                nodes: nodes,
+                links: edges
+            }
+           /*const N = 300;
+           const gData = {
+               nodes: [...Array(N).keys()].map(i => ({ id: i })),
+               links: [...Array(N).keys()]
+                   .filter(id => id)
+                   .map(id => ({
+                       source: id,
+                       target: Math.round(Math.random() * (id-1))
+                   }))
+           };*/
+
+           /*const Graph = ForceGraph3D()
+           (document.getElementById('3d-graph'))
+               .graphData(gData);*/
+
+           /*const N = 300;
+           const gData = {
+               nodes: [...Array(N).keys()].map(i => ({ id: i })),
+               links: [...Array(N).keys()]
+                   .filter(id => id)
+                   .map(id => ({
+                       source: id,
+                       target: Math.round(Math.random() * (id-1))
+                   }))
+           };
+
+           const Graph = ForceGraph3D()
+           (document.getElementById('3d-graph'))
+               .graphData(gData);*/
+
+</script>
+
+
+
+
+
+<script type="text/javascript">
+
+</script>
+
+</body>
+</html>

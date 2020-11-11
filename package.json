@@ -1,0 +1,9 @@
+{
+  "name": "NodeJS",
+  "version": "1.0.0",
+  "dependencies": {
+    "three": "^0.121.1",
+    "express": "^4.17.1",
+    "three-orbitcontrols": "^2.110.3"
+  }
+}
